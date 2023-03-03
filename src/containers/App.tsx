@@ -1,19 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import CardList from "../components/CardList";
 import SearchBox from "../components/SearchBox";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Scroll from "../components/Scroll";
 import "./App.css";
 
+import { getData } from "../utils/data.utils";
+
+export type Robot = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 const App = () => {
-  const [robots, setRobots] = useState([]);
   const [searchfield, setSearchfield] = useState("");
-  const [filteredRobots, setFilteredRobots] = useState("");
+  const [robots, setRobots] = useState<Robot[]>([]);
+  const [filteredRobots, setFilteredRobots] = useState(robots);
 
   useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => response.json())
-      .then((users) => setRobots(users));
+    const fetchUsers = async () => {
+      const users = await getData<Robot[]>(
+        "https://jsonplaceholder.typicode.com/users"
+      );
+      setRobots(users);
+    };
+    fetchUsers();
   }, []);
 
   useEffect(() => {
@@ -24,16 +36,18 @@ const App = () => {
     setFilteredRobots(newFilteredRobots);
   }, [robots, searchfield]);
 
-  const onSearchChange = (event) => {
+  const onSearchChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setSearchfield(event.target.value.toLowerCase());
   };
 
-  return !robots.length ? (
-    <h1 className="tc">Loading...</h1>
-  ) : (
+  return (
     <div className="tc">
       <h1 className="f1">RoboFriends</h1>
-      <SearchBox searchChange={onSearchChange} />
+      <SearchBox
+        className="robots-search-box"
+        searchChange={onSearchChange}
+        placeholder="search robots"
+      />
       <Scroll>
         <ErrorBoundary>
           <CardList robots={filteredRobots} />
